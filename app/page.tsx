@@ -1,65 +1,91 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from 'next/link';
+import Image from 'next/image';
+import { ArrowRight, User, Heart } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+
+export default function HomePage() {
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      // 1. Supabase 세션 확인 (소셜 로그인용)
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session?.user) {
+        const metadata = session.user.user_metadata;
+        setUser({
+          userName: metadata.full_name || metadata.name || session.user.email?.split('@')[0],
+          petName: metadata.petName || '우리 아이', // 소셜 로그인은 아직 아이 이름이 없음
+          email: session.user.email
+        });
+      } else {
+        // 2. localStorage 확인 (일반 로그인/레거시용)
+        const saved = localStorage.getItem('pawly_user');
+        if (saved) setUser(JSON.parse(saved));
+      }
+    };
+
+    checkUser();
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
+    <div className="w-full bg-slate-50 font-sans text-slate-800 relative overflow-hidden min-h-screen flex flex-col">
+      {/* Background Ambient Effects */}
+      <div className="absolute top-0 right-0 w-[80%] h-[60%] bg-gradient-to-bl from-blue-100/40 via-purple-50/20 to-transparent pointer-events-none -z-10 blur-3xl opacity-60" />
+      <div className="absolute top-20 left-[-10%] w-[50%] h-[50%] bg-indigo-50/40 rounded-full blur-[120px] pointer-events-none -z-10" />
+
+      <main className="flex-1 w-full px-6 flex flex-col items-center justify-center text-center animate-in fade-in duration-700 space-y-8 pb-32">
+
+        {/* Logo & Text Content */}
+        <div className="space-y-6">
+          <div className="relative h-24 w-60 mx-auto opacity-90 transition-transform hover:scale-105 duration-300">
             <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+              src="/logo.png"
+              alt="Pawly"
+              fill
+              priority
+              className="object-contain object-center"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </div>
+
+          <div className="space-y-4">
+            {user && (
+              <div className="animate-in zoom-in-95 duration-500 inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider mb-2 border border-blue-100">
+                <Heart className="w-3 h-3 fill-current" />
+                {user.petName} & {user.userName}
+              </div>
+            )}
+
+            <h1 className="text-4xl font-black text-slate-900 leading-tight tracking-tight">
+              반려동물을 위한<br />
+              <span className="text-blue-600">응급Q&A 챗봇</span>
+            </h1>
+            <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-[300px] mx-auto">
+              쉽고 빠르게<br />
+              응급 도우미를 만나보세요
+            </p>
+          </div>
         </div>
+
       </main>
+
+      {/* Bottom Button Area */}
+      <div className="fixed bottom-[140px] left-0 right-0 px-6 w-full max-w-[600px] mx-auto z-20">
+        <Link
+          href="/select-pet"
+          className="group block w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl py-4 shadow-xl shadow-blue-500/30 active:scale-[0.98] transition-all duration-300 relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+          <div className="relative flex items-center justify-center gap-2">
+            <span className="text-xl font-bold tracking-wide">시작하기</span>
+            <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" strokeWidth={2.5} />
+          </div>
+        </Link>
+      </div>
+
     </div>
   );
 }
