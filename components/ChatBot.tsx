@@ -106,18 +106,22 @@ export default function ChatBot() {
         }
     };
 
+    // Event Listener for external open triggers
+    useEffect(() => {
+        const handleOpenChat = () => {
+            setIsOpen(true);
+            setIsMinimized(false);
+        };
+
+        window.addEventListener('open-chatbot', handleOpenChat);
+        return () => window.removeEventListener('open-chatbot', handleOpenChat);
+    }, []);
+
+    if (!isOpen && !isMinimized) return null;
+
     if (!isOpen) {
-        return (
-            <button
-                onClick={() => setIsOpen(true)}
-                className="fixed top-24 right-6 w-14 h-14 bg-white text-blue-600 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 flex items-center justify-center hover:scale-110 active:scale-95 transition-all duration-300 z-[60] group"
-            >
-                <div className="relative">
-                    <MessageCircle className="w-7 h-7 group-hover:rotate-12 transition-transform" />
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
-                </div>
-            </button>
-        );
+        // This block is unreachable based on logic above, but keeping for safety structure if needed
+        return null;
     }
 
     return (
