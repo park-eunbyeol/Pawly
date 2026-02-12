@@ -37,11 +37,12 @@ export default function BottomNav() {
 
             {/* ChatBot Trigger */}
             {/* ChatBot Trigger */}
-            <button
-                onClick={() => window.dispatchEvent(new CustomEvent('open-chatbot'))}
-                className="flex flex-col items-center gap-1.5 transition-all duration-300 opacity-100 hover:opacity-100 group"
+            {/* ChatBot Trigger */}
+            <Link
+                href="/chat"
+                className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${pathname === '/chat' ? 'opacity-100' : 'opacity-40 hover:opacity-100'} group`}
             >
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-slate-900 text-white shadow-lg shadow-slate-200 group-hover:scale-105 transition-transform">
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:scale-105 ${pathname === '/chat' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30' : 'bg-slate-900 text-white shadow-lg shadow-slate-200'}`}>
                     <div className="relative">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -49,10 +50,10 @@ export default function BottomNav() {
                         <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-slate-900 animate-pulse" />
                     </div>
                 </div>
-                <span className="text-[10px] font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                <span className={`text-[10px] font-bold transition-colors ${pathname === '/chat' ? 'text-blue-600' : 'text-slate-900'}`}>
                     AI 상담
                 </span>
-            </button>
+            </Link>
 
             {navItems.slice(2).map((item) => {
                 const isActive = pathname === item.path;

@@ -201,20 +201,20 @@ export default function DiaryPage() {
                     </div>
 
                     <div className="relative z-10">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-lg font-bold flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4 sm:gap-0">
+                            <h2 className="text-lg font-bold flex items-center gap-2 whitespace-nowrap">
                                 <Stethoscope className="w-5 h-5" />
                                 예정된 케어
                             </h2>
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleAiAnalysis}
-                                    className="text-xs font-bold bg-white text-blue-600 hover:bg-white/90 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 shadow-sm"
+                                    className="text-xs font-bold bg-white text-blue-600 hover:bg-white/90 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 shadow-sm whitespace-nowrap"
                                 >
                                     <Activity className="w-3 h-3" />
                                     AI 건강 리포트
                                 </button>
-                                <button className="text-xs font-bold bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1">
+                                <button className="text-xs font-bold bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 whitespace-nowrap">
                                     <Plus className="w-3 h-3" />
                                     추가
                                 </button>

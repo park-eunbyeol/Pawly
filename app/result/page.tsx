@@ -24,6 +24,9 @@ interface Hospital {
     category: string;
     rating: string;
     reviewCount: number;
+    operatingStatus: string;
+    statusColor: string;
+    isOpen: boolean;
 }
 
 interface SeverityResult {
@@ -146,18 +149,60 @@ function ResultContent() {
                     const bounds = new window.kakao.maps.LatLngBounds();
                     const hospitalData = data.slice(0, 10).map((place: any, idx: number) => {
                         const name = place.place_name;
-                        const is24h = name.includes('24') || name.includes('심야') || name.includes('야간');
+                        const is24h = name.includes('24') || name.includes('심야') || name.includes('야간') || name.includes('응급');
                         const isExotic = name.includes('특수') || name.includes('조류') || name.includes('exotic') || !isGeneral;
 
-                        const primaryTag = is24h ? '24시간 진료' : '일반진료 가능';
-                        const specialtyTag = isExotic ? '특수동물 진료 가능' : '특수동물 문의필요';
+                        const primaryTag = is24h ? '24시간 진료' : '일반진료';
+                        const specialtyTag = isExotic ? '특수동물 진료' : '일반 진료';
 
-                        // ✅ 반려동물 종류에 따라 태그 순서 변경
-                        // 강아지/고양이: [일반/24시간, 영업중, 특수동물]
-                        // 특수동물: [특수동물, 영업중, 일반/24시간]
+                        // ✅ 영업 상태 로직 (시간 기반)
+                        const now = new Date();
+                        const day = now.getDay(); // 0: Sun, 1-6: Mon-Sat
+                        const hour = now.getHours();
+
+                        let operatingStatus = "진료 종료";
+                        let statusColor = "text-slate-400 bg-slate-100";
+                        let isOpen = false;
+
+                        if (is24h) {
+                            operatingStatus = "24시간 영업 중";
+                            statusColor = "text-blue-600 bg-blue-50";
+                            isOpen = true;
+                        } else {
+                            // 일반 병원 가정: 평일 09-19, 토 09-15, 일 휴무
+                            if (day === 0) {
+                                operatingStatus = "오늘 휴무";
+                                statusColor = "text-red-500 bg-red-50";
+                                isOpen = false;
+                            } else if (day === 6) {
+                                // 토요일
+                                if (hour >= 9 && hour < 15) {
+                                    operatingStatus = "영업 중";
+                                    statusColor = "text-green-700 bg-gray-100";
+                                    isOpen = true;
+                                } else {
+                                    operatingStatus = "진료 종료";
+                                    statusColor = "text-slate-500 bg-slate-100";
+                                    isOpen = false;
+                                }
+                            } else {
+                                // 평일
+                                if (hour >= 9 && hour < 19) {
+                                    operatingStatus = "영업 중";
+                                    statusColor = "text-green-700 bg-gray-100";
+                                    isOpen = true;
+                                } else {
+                                    operatingStatus = "진료 종료";
+                                    statusColor = "text-slate-500 bg-slate-100";
+                                    isOpen = false;
+                                }
+                            }
+                        }
+
+                        // 영업 중 태그 제거 -> 실제 데이터가 없으므로
                         const tags = isGeneral
-                            ? [primaryTag, '영업 중', specialtyTag]
-                            : [specialtyTag, '영업 중', primaryTag];
+                            ? [primaryTag, specialtyTag]
+                            : [specialtyTag, primaryTag];
 
                         // ✅ 별점 및 리뷰 수 시뮬레이션 (카카오 SDK 기본 제공 안 함)
                         const mockRating = (Math.random() * (5.0 - 3.8) + 3.8).toFixed(1);
@@ -176,7 +221,10 @@ function ResultContent() {
                             placeUrl: place.place_url,
                             category: place.category_name,
                             rating: mockRating,
-                            reviewCount: mockReviews
+                            reviewCount: mockReviews,
+                            operatingStatus,
+                            statusColor,
+                            isOpen
                         };
                     });
 
@@ -599,12 +647,18 @@ function ResultContent() {
                                         >
                                             <div className="flex justify-between items-start mb-4">
                                                 <h4 className="text-xl font-black text-slate-900 group-hover:text-blue-600 transition-colors">{h.name}</h4>
-                                                <span className="text-[10px] font-black px-3 py-1 bg-blue-50 text-[#4A90E2] rounded-full">{h.distance}</span>
+                                                <div className="flex flex-col items-end gap-1.5">
+                                                    <span className="text-[10px] font-black px-3 py-1 bg-blue-50 text-[#4A90E2] rounded-full">{h.distance}</span>
+                                                    <span className={`text-[11px] font-black px-3 py-1 rounded-full border border-current/10 flex items-center gap-1.5 shadow-sm ${h.statusColor}`}>
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                                                        {h.operatingStatus}
+                                                    </span>
+                                                </div>
                                             </div>
                                             <p className="text-sm text-slate-400 font-bold mb-6">{h.address}</p>
                                             <div className="flex flex-wrap gap-2 mb-6">
                                                 {h.tags.map((tag, tIdx) => {
-                                                    const isAvailable = tag === '특수동물 진료 가능';
+                                                    const isAvailable = tag.includes('특수');
                                                     return (
                                                         <span
                                                             key={tIdx}
@@ -662,90 +716,94 @@ function ResultContent() {
                     </div>
 
                     <div className="flex-1 overflow-y-auto px-8 pt-12 pb-24 space-y-10">
-                        <div className="space-y-4 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                                <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] bg-blue-50 px-3 py-1 rounded-full">
-                                    {selectedHospital.distance}
-                                </span>
-                            </div>
-                            <h2 className="text-4xl font-black text-slate-900 tracking-tighter leading-tight">{selectedHospital.name}</h2>
-                            <p className="text-xs font-bold text-slate-400 leading-relaxed uppercase tracking-widest">{selectedHospital.category}</p>
-
-                            {/* Star Rating UI */}
-                            <div className="flex flex-col items-center gap-2 pt-2">
-                                <div className="flex items-center gap-1">
-                                    {[1, 2, 3, 4, 5].map((star) => (
-                                        <svg
-                                            key={star}
-                                            className={`w-5 h-5 ${star <= Math.floor(parseFloat(selectedHospital.rating)) ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200'}`}
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                                        </svg>
-                                    ))}
-                                    <span className="ml-2 text-xl font-black text-slate-900">{selectedHospital.rating}</span>
+                        <div className="space-y-6 text-center">
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="flex items-center justify-center gap-2">
+                                    <span className="text-[10px] font-black text-blue-500 uppercase tracking-[0.2em] bg-blue-50 px-3 py-1 rounded-full">
+                                        {selectedHospital.distance}
+                                    </span>
+                                    {/* Simplified Open/Close Dot Indicator - Solid Color for Visibility */}
+                                    <span className={`flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full shadow-sm border border-current/10 ${selectedHospital.statusColor}`}>
+                                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
+                                        {selectedHospital.operatingStatus}
+                                    </span>
                                 </div>
-                                <p className="text-[10px] font-bold text-slate-400 tracking-widest">({selectedHospital.reviewCount} REVIEWS)</p>
+                                <h2 className="text-3xl font-black text-slate-900 tracking-tighter leading-tight break-keep px-4">{selectedHospital.name}</h2>
+                                <p className="text-xs font-bold text-slate-400 leading-relaxed uppercase tracking-widest">{selectedHospital.category}</p>
+
+                                {/* Star Rating UI */}
+                                <div className="flex items-center gap-1.5 pt-1">
+                                    <div className="flex items-center">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <svg
+                                                key={star}
+                                                className={`w-4 h-4 ${star <= Math.floor(parseFloat(selectedHospital.rating)) ? 'text-amber-400 fill-amber-400' : 'text-slate-200 fill-slate-200'}`}
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                            </svg>
+                                        ))}
+                                    </div>
+                                    <span className="text-sm font-black text-slate-900">{selectedHospital.rating}</span>
+                                    <span className="text-[10px] font-bold text-slate-400 tracking-widest">({selectedHospital.reviewCount})</span>
+                                </div>
                             </div>
                         </div>
 
-                        <div className="grid gap-4">
-                            <div className="p-8 bg-slate-50 rounded-[40px] space-y-2 border border-slate-100/50">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                        <div className="space-y-4">
+                            <div className="p-6 bg-slate-50 rounded-[32px] space-y-4 border border-slate-100/50">
+                                <div className="space-y-1">
                                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Address</p>
+                                    <p className="text-base font-bold text-slate-700 leading-snug break-keep">{selectedHospital.address}</p>
                                 </div>
-                                <p className="text-lg font-bold text-slate-700 leading-snug">{selectedHospital.address}</p>
-                            </div>
-
-                            <div className="p-8 bg-slate-50 rounded-[40px] space-y-2 border border-slate-100/50">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                <div className="w-full h-[1px] bg-slate-200/50" />
+                                <div className="space-y-1">
                                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Contact</p>
+                                    <p className="text-xl font-black text-slate-700 tracking-tighter">{selectedHospital.phone}</p>
                                 </div>
-                                <p className="text-3xl font-black text-slate-700 tracking-tighter">{selectedHospital.phone}</p>
                             </div>
                         </div>
 
-                        <div className="pt-10 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
+                        <div className="pt-4 space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
                                 <a
                                     href={`https://map.kakao.com/link/to/${selectedHospital.name},${selectedHospital.lat},${selectedHospital.lng}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="block"
                                 >
-                                    <button className="w-full py-6 rounded-[28px] bg-blue-600 text-white text-sm font-black uppercase tracking-[0.1em] shadow-lg shadow-blue-200 active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-2">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <button className="w-full py-4 rounded-[24px] bg-blue-600 text-white text-xs font-black uppercase tracking-[0.1em] shadow-lg shadow-blue-200 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                             <polygon points="3 11 22 2 13 21 11 13 3 11" />
                                         </svg>
                                         <span>길 안내</span>
                                     </button>
                                 </a>
+
                                 <a
                                     href={selectedHospital.placeUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="block"
                                 >
-                                    <button className="w-full py-6 rounded-[28px] bg-white border-2 border-slate-100 text-slate-900 text-sm font-black uppercase tracking-[0.1em] active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-2">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <button className="w-full py-4 rounded-[24px] bg-white border-2 border-slate-100 text-slate-900 text-xs font-black uppercase tracking-[0.1em] active:scale-[0.98] transition-all flex flex-col items-center justify-center gap-2">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                             <circle cx="12" cy="12" r="10" />
                                             <line x1="2" y1="12" x2="22" y2="12" />
                                             <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                                         </svg>
-                                        <span>장소 상세</span>
+                                        <span>상세 정보</span>
                                     </button>
                                 </a>
                             </div>
 
                             {selectedHospital.phone !== '번호 없음' && (
                                 <a href={`tel:${selectedHospital.phone}`} className="block w-full">
-                                    <button className="w-full py-8 rounded-[36px] bg-slate-900 text-white text-xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-slate-200 active:scale-[0.98] transition-all flex items-center justify-center gap-4">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <button className="w-full py-5 rounded-[28px] bg-slate-900 text-white text-lg font-black uppercase tracking-[0.1em] shadow-2xl shadow-slate-200 active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                             <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                                         </svg>
-                                        <span>상담 전화하기</span>
+                                        <span>전화 걸기</span>
                                     </button>
                                 </a>
                             )}

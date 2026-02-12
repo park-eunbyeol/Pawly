@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 import Header from "@/components/Header";
 import BottomNav from "@/components/BottomNav";
-import ChatBot from "@/components/ChatBot";
+
 import PushNotificationManager from "@/components/PushNotificationManager";
 
 export const metadata: Metadata = {
@@ -38,7 +38,7 @@ export default function RootLayout({
             {children}
           </main>
           <BottomNav />
-          <ChatBot />
+
           <PushNotificationManager />
         </div>
       </body>
