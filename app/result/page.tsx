@@ -223,7 +223,11 @@ function ResultContent() {
                     // ✅ 특수동물병원 검색 결과가 없으면 일반 동물병원으로 재검색
                     ps.keywordSearch("동물병원", searchCallback, searchOptions);
                 } else {
-                    setMapError("주변에서 동물병원을 찾을 수 없습니다.");
+                    const errorMsg = status === window.kakao.maps.services.Status.ZERO_RESULT
+                        ? "주변에 동물병원이 없습니다."
+                        : `지도 정보를 불러올 수 없습니다. (에러코드: ${status})`;
+
+                    setMapError(errorMsg);
                     setHospitals([]);
                     setIsLoadingHospitals(false);
                 }
