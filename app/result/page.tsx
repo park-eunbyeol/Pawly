@@ -263,7 +263,7 @@ function ResultContent() {
         if (isAnalyzing) return; // 분석 완료 전에는 실행 안함
 
         const scriptId = 'kakao-map-sdk';
-        const apiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_APP_KEY;
+        const apiKey = process.env.NEXT_PUBLIC_KAKAO_MAP_APP_KEY || 'f31ef0d8aa056ec6edf2fa6af1b6d9e9';
 
         if (!apiKey) {
             setMapError("Kakao Map API key is missing.");
