@@ -356,8 +356,9 @@ function ResultContent() {
                     }
                 }, 100);
             };
-            script.onerror = () => {
-                setMapError("Kakao Script load failed");
+            script.onerror = (e) => {
+                console.error("Kakao Map Script Load Error:", e);
+                setMapError("지도를 불러올 수 없습니다. Vercel 환경변수(NEXT_PUBLIC_KAKAO_MAP_APP_KEY) 또는 Kakao 도메인 등록을 확인해주세요.");
                 setIsLoadingHospitals(false);
             };
             document.head.appendChild(script);
