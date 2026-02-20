@@ -1,13 +1,13 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     try {
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
         const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
         if (!supabaseUrl || !supabaseAnonKey) {
-            console.error('Middleware Error: Missing Supabase environment variables')
+            console.error('Proxy Error: Missing Supabase environment variables')
             return NextResponse.next({
                 request: {
                     headers: request.headers,
@@ -48,10 +48,7 @@ export async function middleware(request: NextRequest) {
 
         return response
     } catch (e) {
-        console.error('Middleware Error:', e)
-        // Ensure we return a valid response even if middleware fails, 
-        // to avoid "MIDDLEWARE_INVOCATION_FAILED" hard crash if possible,
-        // though usually environment issues are the cause.
+        console.error('Proxy Error:', e)
         return NextResponse.next({
             request: {
                 headers: request.headers,
