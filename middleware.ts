@@ -2,38 +2,62 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-    let response = NextResponse.next({
-        request: {
-            headers: request.headers,
-        },
-    })
+    try {
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-    const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return request.cookies.getAll()
+        if (!supabaseUrl || !supabaseAnonKey) {
+            console.error('Middleware Error: Missing Supabase environment variables')
+            return NextResponse.next({
+                request: {
+                    headers: request.headers,
                 },
-                setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-                    response = NextResponse.next({
-                        request: {
-                            headers: request.headers,
-                        },
-                    })
-                    cookiesToSet.forEach(({ name, value, options }) =>
-                        response.cookies.set(name, value, options)
-                    )
-                },
-            },
+            })
         }
-    )
 
-    await supabase.auth.getUser()
+        let response = NextResponse.next({
+            request: {
+                headers: request.headers,
+            },
+        })
 
-    return response
+        const supabase = createServerClient(
+            supabaseUrl,
+            supabaseAnonKey,
+            {
+                cookies: {
+                    getAll() {
+                        return request.cookies.getAll()
+                    },
+                    setAll(cookiesToSet) {
+                        cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+                        response = NextResponse.next({
+                            request: {
+                                headers: request.headers,
+                            },
+                        })
+                        cookiesToSet.forEach(({ name, value, options }) =>
+                            response.cookies.set(name, value, options)
+                        )
+                    },
+                },
+            }
+        )
+
+        await supabase.auth.getUser()
+
+        return response
+    } catch (e) {
+        console.error('Middleware Error:', e)
+        // Ensure we return a valid response even if middleware fails, 
+        // to avoid "MIDDLEWARE_INVOCATION_FAILED" hard crash if possible,
+        // though usually environment issues are the cause.
+        return NextResponse.next({
+            request: {
+                headers: request.headers,
+            },
+        })
+    }
 }
 
 export const config = {
