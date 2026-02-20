@@ -19,13 +19,15 @@
     "next": "16.1.6",
     "proj4": "^2.20.2",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "react-kakao-login": "^2.1.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "encoding": "^0.1.13",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",

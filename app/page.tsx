@@ -46,6 +46,7 @@ export default function HomePage() {
               src="/logo.png"
               alt="Pawly"
               fill
+              sizes="240px"
               priority
               className="object-contain object-center"
             />

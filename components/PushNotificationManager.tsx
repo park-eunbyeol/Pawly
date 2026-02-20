@@ -75,12 +75,13 @@ export default function PushNotificationManager() {
     useEffect(() => {
         if (permission === 'granted') {
             const sendDailySummary = () => {
-                const summaryKey = `pawly_master_summary_v1`; // 날짜 대신 고유 키 사용 (평생 한 번)
+                // 매일 한 번씩 발송되도록 날짜를 키에 포함
+                const summaryKey = `pawly_daily_summary_${new Date().toDateString()}`;
 
                 if (localStorage.getItem(summaryKey)) return;
 
                 const title = '🐾 Pawly 건강 브리핑';
-                const body = '이번 주에 심장사상충 예방(D-2) 등 주요 일정이 있습니다. 확인해 보세요!';
+                const body = '오늘의 심장사상충 예방(D-2) 등 주요 일정이 있습니다. 확인해 보세요!';
 
                 setTimeout(() => {
                     showLocalNotification(title, body, '/diary');

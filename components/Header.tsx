@@ -120,7 +120,16 @@ export default function Header() {
                                                     <div key={n.id} className="p-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
                                                         <div className="flex justify-between items-start mb-1">
                                                             <p className="font-bold text-xs text-slate-900">{n.title}</p>
-                                                            <span className="text-[10px] text-slate-400">{n.time}</span>
+                                                            <span className="text-[10px] text-slate-400">
+                                                                {(() => {
+                                                                    const date = new Date(n.id);
+                                                                    const now = new Date();
+                                                                    const isToday = date.toDateString() === now.toDateString();
+                                                                    return isToday
+                                                                        ? date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+                                                                        : `${date.getMonth() + 1}월 ${date.getDate()}일`;
+                                                                })()}
+                                                            </span>
                                                         </div>
                                                         <p className="text-xs text-slate-500 leading-relaxed">{n.body}</p>
                                                     </div>

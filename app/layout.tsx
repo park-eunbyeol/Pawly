@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased selection:bg-blue-100 bg-slate-50`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased selection:bg-blue-100 bg-slate-50`}
       >
         <div className="flex flex-col min-h-screen max-w-[600px] mx-auto bg-white shadow-2xl relative">
           <Header />
